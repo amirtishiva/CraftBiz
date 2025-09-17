@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 240" role="img" aria-label="CraftBriz logo">
+  <defs>
+    <style>
+      /* Retro bubble wordmark inspired by classic sticker logos */
+      .base {
+        font-family: 'Cooper Black', 'CooperBlack', 'Cooper Black Std', 'ChunkFive', 'Baloo 2', 'Fredoka', serif;
+        font-weight: 900;
+        font-size: 138px;
+        letter-spacing: -2.5px;
+        text-rendering: geometricPrecision;
+        shape-rendering: geometricPrecision;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+      }
+      .fill {
+        fill: #0a0a0a;
+      }
+      .cream-outline { stroke: #f3e9d8; stroke-width: 34; paint-order: stroke fill; }
+      .inner-glow {
+        stroke: #f6efe1;
+        stroke-width: 6;
+        paint-order: stroke fill;
+        opacity: 0.5; /* subtle highlight to enhance sticker effect */
+      }
+    </style>
+    <filter id="hardShadow" x="-35%" y="-35%" width="170%" height="170%">
+      <!-- Solid offset shadow like a sticker drop -->
+      <feDropShadow dx="12" dy="12" stdDeviation="0" flood-color="#0a0a0a" flood-opacity="1"/>
+    </filter>
+  </defs>
+  <!-- Order: hard shadow -> cream outline -> black fill (+ subtle inner highlight) -->
+  <g transform="translate(24,178)">
+    <!-- Hard offset black shadow -->
+    <text x="0" y="0" class="base fill" filter="url(#hardShadow)" opacity="0.98">
+      <tspan>Craft</tspan><tspan dx="-6">B</tspan><tspan>riz</tspan>
+    </text>
+
+    <!-- Cream outline for sticker edge -->
+    <text x="0" y="0" class="base fill cream-outline">
+      <tspan>Craft</tspan><tspan dx="-6">B</tspan><tspan>riz</tspan>
+    </text>
+
+    <!-- Foreground black fill -->
+    <text x="0" y="0" class="base fill">
+      <tspan>Craft</tspan><tspan dx="-6">B</tspan><tspan>riz</tspan>
+    </text>
+
+    <!-- Subtle inner cream highlight to match retro cutline sheen -->
+    <text x="0" y="0" class="base fill inner-glow">
+      <tspan>Craft</tspan><tspan dx="-6">B</tspan><tspan>riz</tspan>
+    </text>
+  </g>
+</svg>
+

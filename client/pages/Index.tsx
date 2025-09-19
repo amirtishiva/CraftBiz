@@ -57,6 +57,8 @@ import {
   Linkedin,
   Play,
   X,
+  Mic,
+  Square,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import StepsFlow from "@/components/StepsFlow";
@@ -351,6 +353,164 @@ export default function Index() {
     const [category, setCategory] = useState("Clothing");
     const [style, setStyle] = useState("Modern");
     const [priceRange, setPriceRange] = useState("Mid-Range");
+    const [isListening, setIsListening] = useState(false);
+    const [isProcessing, setIsProcessing] = useState<
+      false | "recognizing" | "translating" | "refining"
+    >(false);
+    const recognitionRef = React.useRef<any>(null);
+    const audioContextRef = React.useRef<AudioContext | null>(null);
+    const analyserRef = React.useRef<AnalyserNode | null>(null);
+    const mediaStreamRef = React.useRef<MediaStream | null>(null);
+    const rafRef = React.useRef<number | null>(null);
+    const [waveform, setWaveform] = useState<number[]>(() => Array.from({ length: 12 }, () => 2));
+
+    const cleanupAudio = () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      try {
+        mediaStreamRef.current?.getTracks()?.forEach((t) => t.stop());
+      } catch {}
+      mediaStreamRef.current = null;
+      try {
+        analyserRef.current?.disconnect();
+      } catch {}
+      analyserRef.current = null;
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {});
+      }
+      audioContextRef.current = null;
+    };
+
+    const animateWaveform = () => {
+      const analyser = analyserRef.current;
+      const ctx = audioContextRef.current;
+      if (!analyser || !ctx) return;
+
+      const buffer = new Uint8Array(analyser.fftSize);
+      analyser.getByteTimeDomainData(buffer);
+
+      // Compute RMS volume between 0..1
+      let sum = 0;
+      for (let i = 0; i < buffer.length; i++) {
+        const v = (buffer[i] - 128) / 128;
+        sum += v * v;
+      }
+      const rms = Math.sqrt(sum / buffer.length);
+      const volume = Math.min(1, Math.max(0, rms * 2.5));
+
+      // Smooth bar heights with easing and slight phase offsets
+      setWaveform((prev) => {
+        const now = performance.now() / 1000;
+        const baseIdle = 2; // px baseline
+        const maxHeight = 18; // px peak
+        const next = prev.map((h, i) => {
+          const phase = i * 0.35;
+          const idlePulse = baseIdle + Math.sin(now * 2 + phase) * 1; // faint idle
+          const target = volume > 0.02
+            ? baseIdle + (0.2 + Math.sin(now * 8 + phase) * 0.1 + volume) * maxHeight
+            : idlePulse;
+          // lerp for smoothness
+          return h + (target - h) * 0.2;
+        });
+        return next;
+      });
+
+      rafRef.current = requestAnimationFrame(animateWaveform);
+    };
+
+    const startListening = () => {
+      try {
+        const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SR) {
+          alert("Speech recognition is not supported in this browser.");
+          return;
+        }
+        const recognition = new SR();
+        recognition.lang = "auto";
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+
+        let finalTranscript = "";
+
+        recognition.onstart = () => setIsListening(true);
+        recognition.onresult = (event: any) => {
+          let interim = "";
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) finalTranscript += transcript + " ";
+            else interim += transcript;
+          }
+          setIdeaText((finalTranscript + interim).trim());
+        };
+        recognition.onerror = () => {
+          setIsListening(false);
+          setIsProcessing(false);
+          cleanupAudio();
+        };
+        recognition.onend = () => {
+          setIsListening(false);
+          if (finalTranscript.trim()) {
+            // Simulated processing stages
+            setIsProcessing("recognizing");
+            setTimeout(() => setIsProcessing("translating"), 600);
+            setTimeout(() => setIsProcessing("refining"), 1200);
+            setTimeout(() => {
+              // Naive "refine": trim and ensure sentence casing
+              const refined = finalTranscript
+                .trim()
+                .replace(/\s+/g, " ")
+                .replace(/^\w/, (c) => c.toUpperCase());
+              setIdeaText(refined);
+              setIsProcessing(false);
+            }, 2000);
+          }
+          // graceful decay to idle before stopping animation
+          let frames = 0;
+          const decay = () => {
+            frames++;
+            setWaveform((prev) => prev.map((h) => h + (2 - h) * 0.15));
+            if (frames < 12) requestAnimationFrame(decay);
+            else cleanupAudio();
+          };
+          requestAnimationFrame(decay);
+        };
+
+        recognitionRef.current = recognition;
+        recognition.start();
+
+        // Start audio waveform capture
+        navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+          mediaStreamRef.current = stream;
+          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          audioContextRef.current = ctx as AudioContext;
+          const analyser = ctx.createAnalyser();
+          analyser.fftSize = 1024;
+          analyser.smoothingTimeConstant = 0.85;
+          analyserRef.current = analyser;
+          const source = ctx.createMediaStreamSource(stream);
+          source.connect(analyser);
+          animateWaveform();
+        }).catch(() => {
+          // If audio stream fails, still allow speech recognition UI
+        });
+      } catch (e) {
+        setIsListening(false);
+        setIsProcessing(false);
+        cleanupAudio();
+      }
+    };
+
+    const stopListening = () => {
+      try {
+        recognitionRef.current?.stop?.();
+      } finally {
+        setIsListening(false);
+        // graceful decay handled in onend; if onend doesn't fire, cleanup after short delay
+        setTimeout(() => cleanupAudio(), 1500);
+      }
+    };
 
     return (
       <Dialog open={showNewProjectModal} onOpenChange={setShowNewProjectModal}>
@@ -374,13 +534,51 @@ export default function Index() {
                 <label className="text-sm font-medium">
                   Describe your idea:
                 </label>
-                <textarea
-                  className="w-full mt-1 p-3 border border-border rounded-md resize-none"
-                  rows={3}
-                  placeholder="e.g., Eco-friendly t-shirt brand for young professionals"
-                  value={ideaText}
-                  onChange={(e) => setIdeaText(e.target.value)}
-                />
+                <div className="relative mt-1">
+                  <textarea
+                    className="w-full p-3 pr-12 border border-border rounded-md resize-none"
+                    rows={3}
+                    placeholder={
+                      isListening
+                        ? "Listening... feel free to speak in any language."
+                        : "e.g., Eco-friendly t-shirt brand for young professionals"
+                    }
+                    value={ideaText}
+                    onChange={(e) => setIdeaText(e.target.value)}
+                  />
+
+                  <button
+                    type="button"
+                    aria-label={isListening ? "Stop recording" : "Start recording"}
+                    onClick={isListening ? stopListening : startListening}
+                    className={`absolute right-2 bottom-2 inline-flex items-center justify-center h-8 w-8 rounded-full border ${
+                      isListening ? "border-red-300 bg-red-50" : "border-border bg-background"
+                    }`}
+                  >
+                    {isListening ? (
+                      <Square className="h-4 w-4 text-red-500 animate-pulse" />
+                    ) : (
+                      <Mic className="h-4 w-4" />
+                    )}
+                  </button>
+
+                  {isListening && (
+                    <div className="absolute left-3 bottom-2 flex items-end gap-1 h-8">
+                      <span className="sr-only">Listening waveform</span>
+                      {waveform.map((h, i) => (
+                        <div key={i} className="w-1 bg-primary/70 rounded-sm" style={{ height: Math.max(2, Math.min(22, h)) }} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {isProcessing && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {isProcessing === "recognizing" && "🔊 Recognizing Speech..."}
+                    {isProcessing === "translating" && "🌐 Translating to English..."}
+                    {isProcessing === "refining" && "✨ Refining Idea..."}
+                  </div>
+                )}
               </div>
 
               <div>

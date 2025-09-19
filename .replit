@@ -31,14 +31,18 @@ waitForPort = 5000
 outputType = "webview"
 
 [[ports]]
+localPort = 3001
+externalPort = 3001
+
+[[ports]]
 localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 39995
+localPort = 36473
 externalPort = 3000
 
 [deployment]
 deploymentTarget = "vm"
-run = ["node", "dist/server/production.mjs"]
-build = ["pnpm", "build"]
+run = ["node", "dist/server/node-build.mjs"]
+build = ["pnpm", "install", "--frozen-lockfile", "&&", "pnpm", "build"]

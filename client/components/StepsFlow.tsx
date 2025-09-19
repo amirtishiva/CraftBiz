@@ -44,7 +44,7 @@ function ProgressPie({ value, size = 56, strokeWidth = 8 }: { value: number; siz
 }
 
 export default function StepsFlow() {
-  const [category, setCategory] = useState<"clothing" | "food" | "services">("clothing");
+  const [category, setCategory] = useState<"clothing" | "food" | "services" | "technology">("clothing");
   const [active, setActive] = useState(0);
   const progress = (active + 1) / steps.length;
 
@@ -125,7 +125,7 @@ export default function StepsFlow() {
                           <Button variant={category === "clothing" ? "default" : "outline"} size="sm" onClick={() => setCategory("clothing")}>Clothing</Button>
                           <Button variant={category === "food" ? "default" : "outline"} size="sm" onClick={() => setCategory("food")}>Food & Beverage</Button>
                           <Button variant={category === "services" ? "default" : "outline"} size="sm" onClick={() => setCategory("services")}>Services</Button>
-                          <Button variant={category === "technology" ? "default" : "outline"} size="sm" onClick={() => setCategory("Technology")}>Technology</Button>
+                          <Button variant={category === "technology" ? "default" : "outline"} size="sm" onClick={() => setCategory("technology")}>Technology</Button>
                         </div>
                       </div>
                     )}

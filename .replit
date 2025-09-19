@@ -37,3 +37,8 @@ externalPort = 80
 [[ports]]
 localPort = 39995
 externalPort = 3000
+
+[deployment]
+deploymentTarget = "vm"
+run = ["node", "dist/server/production.mjs"]
+build = ["pnpm", "build"]

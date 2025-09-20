@@ -24,6 +24,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Upload } from "lucide-react";
+import VoiceInput from "@/components/VoiceInput";
 import { useLocation, useNavigate } from "react-router-dom";
 
 interface Project {
@@ -202,12 +203,11 @@ const Projects = () => {
                 <label className="text-sm font-medium">
                   Describe your idea:
                 </label>
-                <textarea
-                  className="w-full mt-1 p-3 border border-border rounded-md resize-none"
-                  rows={3}
-                  placeholder="e.g., Eco-friendly t-shirt brand for young professionals"
+                <VoiceInput
                   value={ideaText}
-                  onChange={(e) => setIdeaText(e.target.value)}
+                  onChange={setIdeaText}
+                  placeholder="e.g., Eco-friendly t-shirt brand for young professionals"
+                  rows={3}
                 />
               </div>
 

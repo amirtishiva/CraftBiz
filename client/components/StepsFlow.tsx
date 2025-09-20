@@ -4,6 +4,7 @@ import { Lightbulb, BarChart3, Palette, MapPin, Megaphone, Rocket } from "lucide
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import VoiceInput from "@/components/VoiceInput";
 
 const steps = [
   { icon: Lightbulb, title: "Share Your Idea", desc: "Tell us your business concept in one line. Our AI understands your vision instantly." },
@@ -46,6 +47,7 @@ function ProgressPie({ value, size = 56, strokeWidth = 8 }: { value: number; siz
 export default function StepsFlow() {
   const [category, setCategory] = useState<"clothing" | "food" | "services" | "technology">("clothing");
   const [active, setActive] = useState(0);
+  const [ideaText, setIdeaText] = useState("");
   const progress = (active + 1) / steps.length;
 
   return (
@@ -120,7 +122,12 @@ export default function StepsFlow() {
                     {/** Right panel content varies by active step */}
                     {active === 0 && (
                       <div>
-                        <Input placeholder="Describe your business idea in one line…" />
+                        <VoiceInput
+                          value={ideaText}
+                          onChange={setIdeaText}
+                          placeholder="Describe your business idea in one line…"
+                          rows={2}
+                        />
                         <div className="flex gap-2 mt-3">
                           <Button variant={category === "clothing" ? "default" : "outline"} size="sm" onClick={() => setCategory("clothing")}>Clothing</Button>
                           <Button variant={category === "food" ? "default" : "outline"} size="sm" onClick={() => setCategory("food")}>Food & Beverage</Button>

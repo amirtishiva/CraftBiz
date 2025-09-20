@@ -61,6 +61,7 @@ import {
 import { motion } from "framer-motion";
 import StepsFlow from "@/components/StepsFlow";
 import SiteFooter from "@/components/layout/SiteFooter";
+import VoiceInput from "@/components/VoiceInput";
 import { useLocation, useNavigate } from "react-router-dom";
 // 3D removed per request; using static image instead
 
@@ -374,12 +375,11 @@ export default function Index() {
                 <label className="text-sm font-medium">
                   Describe your idea:
                 </label>
-                <textarea
-                  className="w-full mt-1 p-3 border border-border rounded-md resize-none"
-                  rows={3}
-                  placeholder="e.g., Eco-friendly t-shirt brand for young professionals"
+                <VoiceInput
                   value={ideaText}
-                  onChange={(e) => setIdeaText(e.target.value)}
+                  onChange={setIdeaText}
+                  placeholder="e.g., Eco-friendly t-shirt brand for young professionals"
+                  rows={3}
                 />
               </div>
 
